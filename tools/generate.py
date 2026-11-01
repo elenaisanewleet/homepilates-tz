@@ -150,6 +150,39 @@ class Page:
 PAGES = {}
 
 
+def home(page):
+    h = DATA["home"]
+    shot = page.photo("studio-reformer-standing", h["whyTitle"], priority=True)
+    sections = "".join(a(page.link(slug),title,"tile") for slug,title in DATA["pages"].items() if slug)
+    reviews_url = "https://yandex.ru/maps-reviews-widget/" + INTEGR["organization"] + "?comments"
+    return f"""
+<section class="home-hero wrap">
+  <div><span class="kicker">{LABEL["brandPlace"]}</span>
+    <h1>{esc(h["title"])}</h1>{p(h["intro"])}{p(h["trial"])}
+    <div class="actions">{page.action()}{a(page.link("stoimost"), DATA["pages"]["stoimost"], "textlink go")}</div>
+  </div>
+  <figure class="hero-shot">{shot}<figcaption class="credit">
+    <span>{esc(CONTACT["address"].split(", 2 минуты")[0])}</span><span aria-hidden="true">01 / 08</span>
+  </figcaption></figure>
+</section>
+<section class="band wrap split"><div><span class="section-id" aria-hidden="true">01</span>
+  <h2>{h["whyTitle"]}</h2></div><div>{p(h["why"])}</div></section>
+<section class="band wrap split"><figure>{page.photo("detail-feet-bar",h["whyTitle"])}</figure>
+  <div><span class="section-id" aria-hidden="true">02</span><h2>{h["whoTitle"]}</h2>{listing(h["who"])}</div></section>
+<section class="band wrap split"><div><span class="section-id" aria-hidden="true">03</span>
+  <h2>{h["lessonTitle"]}</h2><div>{p(h["lesson"])}</div></div>{listing(h["steps"],True)}</section>
+<div class="wrap quote"><blockquote>{esc(h["quote"])}</blockquote><cite>{esc(h["author"])}</cite></div>
+<section class="band wrap split"><div><h2>{LABEL["reviews"]}</h2>
+  <div>{a(INTEGR["map"]+"reviews/",LABEL["maps"],"textlink go")}</div></div>
+  <iframe class="frame reviews" title="{LABEL["reviews"]}" loading="lazy" src="{reviews_url}"></iframe></section>
+<nav class="band wrap tiles" aria-label="{LABEL["menu"]}">{sections}</nav>
+<section id="cabinet" class="band wrap split"><div><span class="kicker">{LABEL["account"]}</span>
+  <h2>{esc(h["cta"])}</h2></div><div>{page.widget("personal",LABEL["account"])}</div></section>"""
+
+
+PAGES[""] = home
+
+
 def styles(asset_base):
     fonts = (SRC / "fonts.css").read_text().replace("__ASSETS__", asset_base)
     return fonts + (SRC / "theme.css").read_text()

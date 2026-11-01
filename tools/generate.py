@@ -23,15 +23,26 @@ def render(slug, embed):
     return f'<nav>{nav}</nav><main><h1>{escape(DATA["pages"][slug])}</h1></main>'
 
 
+ASSET_CDN = "https://cdn.jsdelivr.net/gh/elenaisanewleet/homepilates-tz@7d21b5c8de5e5a31d09ea95fac29a1acda797ac6/site/assets"
+
+
+def styles(asset_base):
+    fonts = (ROOT / "tools/fonts.css").read_text().replace("__ASSETS__", asset_base)
+    return fonts + (ROOT / "tools/theme.css").read_text()
+
+
 def generate():
     TILDA.mkdir(exist_ok=True)
+    (TILDA / "common.html").write_text("<style>\n" + styles(ASSET_CDN) + "</style>\n")
+    (SITE / "assets/homepilates.css").write_text(styles("."))
     for slug, title in DATA["pages"].items():
         directory = SITE / slug
         directory.mkdir(parents=True, exist_ok=True)
         (directory / "index.html").write_text(
             '<!doctype html>\n<html lang="ru"><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            f'<title>{escape(title)} — HomePilates</title>{render(slug, False)}</html>\n'
+            f'<link rel="stylesheet" href="{("../" if slug else "")}assets/homepilates.css">'
+            f'<title>{escape(title)} — HomePilates</title><body><div class="hp">{render(slug, False)}</div></body></html>\n'
         )
         (TILDA / ((slug or "index") + ".html")).write_text(render(slug, True) + "\n")
 

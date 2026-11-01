@@ -210,6 +210,28 @@ def schedule(page):
 PAGES["raspisanie"] = schedule
 
 
+def prices(page):
+    data = DATA["prices"]
+    tables = []
+    for i, group in enumerate(data["groups"]):
+        columns = data["singleColumns"] if i == 0 else data["columns"]
+        head = "".join(f'<th scope="col">{esc(col)}</th>' for col in columns)
+        rows = []
+        for cells in group["rows"]:
+            row = "".join(f'<td data-label="{esc(col)}">{esc(value)}</td>' for col,value in zip(columns,cells))
+            rows.append("<tr>" + row + "</tr>")
+        title = esc(group["title"])
+        tables.append(f'<details><summary><span class="index" aria-hidden="true">{i+1:02d}</span>{title}</summary>'
+                      f'<div class="tablebox"><table aria-label="{title}"><thead><tr>{head}</tr></thead>'
+                      f'<tbody>{"".join(rows)}</tbody></table></div></details>')
+    return (page.intro(data["intro"]) + f'<section class="band wrap"><h2 class="details-header">{data["title"]}</h2>'
+            + "".join(tables) + f'<div class="actions">{page.action()}</div></section>'
+            + f'<section class="band wrap split"><h2>{data["notice"]}</h2>{p(data["rule"])}</section>')
+
+
+PAGES["stoimost"] = prices
+
+
 def styles(asset_base):
     fonts = (SRC / "fonts.css").read_text().replace("__ASSETS__", asset_base)
     return fonts + (SRC / "theme.css").read_text()

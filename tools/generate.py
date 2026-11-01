@@ -275,6 +275,46 @@ def certificates(page):
 PAGES["sertifikaty"] = certificates
 
 
+def feedback():
+    email = esc(CONTACT["email"])
+    return (f'<form class="form-grid" data-feedback="{email}" data-subject="{LABEL["feedback"]}" '
+            f'action="mailto:{email}" method="post" enctype="text/plain">'
+            f'<label class="field">{LABEL["phone"]}<input type="tel" autocomplete="tel" '
+            f'name="{LABEL["phone"]}" required></label>'
+            f'<label class="field">{LABEL["message"]}<textarea rows="3" name="{LABEL["message"]}" required></textarea></label>'
+            f'<button class="action" type="submit">{LABEL["submit"]}</button>{consent()}'
+            f'<span>{CONTACT["emailLabel"]}: {a("mailto:"+CONTACT["email"], CONTACT["email"])}</span></form>')
+
+
+def contacts(page):
+    c = CONTACT
+    social_rows = (f'<span>{c["botLabel"]} {a(c["bot"], c["bot"])}</span>'
+                   f'<span>{c["whatsappLabel"]}: {a("https://wa.me/"+digits(c["messengerPhone"]),c["messengerPhone"])}</span>'
+                   f'<span>{max_contact()}</span>'
+                   f'<span>{LABEL["phone"]}: {a("tel:+"+digits(c["phone"]),c["phone"])}</span>'
+                   f'<span>{c["emailLabel"]}: {a("mailto:"+c["email"],c["email"])}</span>')
+    apps = "".join(f'<li>{a(url, label) if url else esc(label)+" "+MISS}</li>' for label,url in c["stores"].items())
+    map_url = "https://yandex.ru/map-widget/v1/?" + urlencode(dict(ol="biz",oid=INTEGR["organization"],z="17"))
+    return (f'<section class="intro"><div class="wrap"><span class="kicker">{DATA["brand"]}</span>'
+            f'<h1>{page.title}</h1></div></section>'
+            f'<section class="band wrap split"><div><h2>{c["addressLabel"]}</h2><div>{p(c["address"])}'
+            f'{p(c["directions"])}{p(c["hours"])}</div><div class="actions">'
+            f'{a(INTEGR["map"], LABEL["maps"],"textlink go")}</div></div>'
+            f'<iframe class="frame map" src="{esc(map_url)}" title="{LABEL["maps"]}" loading="lazy"></iframe></section>'
+            f'<section class="band wrap split"><div><h2>{c["booking"]}</h2><div class="actions">{page.action()}</div>'
+            f'<div><span class="cap">{c["apps"]}</span><ul class="list">{apps}</ul></div></div>'
+            f'<div class="contact-lines">{social_rows}<span>{LABEL["social"]}</span>{social()}'
+            f'<span>{c["instagramLabel"]} {a(c["instagram"],c["instagram"])}</span>{p(c["instagramNote"])}</div></section>'
+            f'<section id="feedback" class="band wrap split"><h2>{LABEL["formTitle"]}</h2>{feedback()}</section>')
+
+
+def digits(phone):
+    return "".join(char for char in phone if char.isdigit())
+
+
+PAGES["kontakty"] = contacts
+
+
 def styles(asset_base):
     fonts = (SRC / "fonts.css").read_text().replace("__ASSETS__", asset_base)
     return fonts + (SRC / "theme.css").read_text()

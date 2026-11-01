@@ -183,6 +183,22 @@ def home(page):
 PAGES[""] = home
 
 
+def directions(page):
+    d = DATA["directions"]
+    cards = []
+    for i, item in enumerate(d["items"],1):
+        title = esc(item["title"])
+        image = page.photo(item["photo"],item["title"]) if item["photo"] else ""
+        cards.append(f'<article class="card">{("<figure>"+image+"</figure>") if image else ""}'
+                     f'<span class="section-id" aria-hidden="true">{i:02d}</span><h2>{title}</h2>'
+                     f'{p(item["text"]) if item["text"] else ""}'
+                     f'{a(page.link("raspisanie"),LABEL["book"],"textlink go")}</article>')
+    return page.intro(d["intro"]) + '<div class="band wrap tiles">' + "".join(cards) + '</div>'
+
+
+PAGES["napravleniya"] = directions
+
+
 def styles(asset_base):
     fonts = (SRC / "fonts.css").read_text().replace("__ASSETS__", asset_base)
     return fonts + (SRC / "theme.css").read_text()

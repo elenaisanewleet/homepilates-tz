@@ -262,6 +262,19 @@ def faq(page):
 PAGES["faq"] = faq
 
 
+def certificates(page):
+    c = DATA["certificates"]
+    return (page.intro(c["intro"],"cadillac-pair-stretch")
+            + f'<section class="band wrap split"><h2>{esc(c["how"])}</h2>{listing(c["steps"],True)}</section>'
+            + f'<section class="band wrap split"><h2>{esc(c["denominationsTitle"])}</h2><div>'
+              f'{listing(c["denominations"])}{p(c["end"])}'
+              f'<div class="stack">{page.widget("personal",LABEL["buy"],"shop/all")}</div>'
+              f'<div class="actions">{a(CONTACT["bot"], LABEL["footerBot"], "textlink go")}</div></div></section>')
+
+
+PAGES["sertifikaty"] = certificates
+
+
 def styles(asset_base):
     fonts = (SRC / "fonts.css").read_text().replace("__ASSETS__", asset_base)
     return fonts + (SRC / "theme.css").read_text()

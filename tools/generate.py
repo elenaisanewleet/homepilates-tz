@@ -232,6 +232,25 @@ def prices(page):
 PAGES["stoimost"] = prices
 
 
+def team(page):
+    team_data = DATA["team"]
+    profiles = []
+    for i, person in enumerate(team_data["people"],1):
+        name = person["name"]
+        if person["photo"]:
+            image = page.photo(person["photo"],name,"portrait")
+        else:
+            image = f'<div class="missing missing-photo" role="img" aria-label="{LABEL["photo"]}: {esc(name)}">{MISS}</div>'
+        bio = "".join(p(text) for text in person["bio"])
+        profiles.append(f'<article class="band wrap split"><figure>{image}</figure><div>'
+                        f'<span class="section-id" aria-hidden="true">{i:02d} / 05</span>'
+                        f'<h2>{esc(name)}</h2><div class="copy">{bio}</div></div></article>')
+    return page.intro(team_data["intro"]) + "".join(profiles)
+
+
+PAGES["komanda"] = team
+
+
 def styles(asset_base):
     fonts = (SRC / "fonts.css").read_text().replace("__ASSETS__", asset_base)
     return fonts + (SRC / "theme.css").read_text()

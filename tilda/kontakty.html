@@ -7,6 +7,16 @@
   root.dataset.ready = "1";
   const find = selector => root.querySelector(selector);
 
+  // Static files keep working on disk; the hosted mirror uses the Tilda routes.
+  if (location.protocol === "https:" || location.protocol === "http:") {
+    root.querySelectorAll('a[href*="index.html"]').forEach(link => {
+      const url = new URL(link.href);
+      if (url.origin !== location.origin || !url.pathname.endsWith("/index.html")) return;
+      url.pathname = url.pathname.slice(0, -"/index.html".length) || "/";
+      link.href = url.href;
+    });
+  }
+
   const burger = find(".burger");
   const nav = find(".nav");
   function menu(open) {

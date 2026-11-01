@@ -162,7 +162,7 @@ def home(page):
     <div class="actions">{page.action()}{a(page.link("stoimost"), DATA["pages"]["stoimost"], "textlink go")}</div>
   </div>
   <figure class="hero-shot">{shot}<figcaption class="credit">
-    <span>{esc(CONTACT["address"].split(", 2 минуты")[0])}</span><span aria-hidden="true">01 / 08</span>
+    <span>{esc(CONTACT["hours"])}</span><span aria-hidden="true">01 / 08</span>
   </figcaption></figure>
 </section>
 <section class="band wrap split"><div><span class="section-id" aria-hidden="true">01</span>

@@ -5,7 +5,7 @@
     <div class="actions"><a class="action" href="/raspisanie">Записаться</a><a class="textlink go" href="/stoimost">Стоимость</a></div>
   </div>
   <figure class="hero-shot"><img class="photo " src="https://cdn.jsdelivr.net/gh/elenaisanewleet/homepilates-tz@7d21b5c8de5e5a31d09ea95fac29a1acda797ac6/site/assets/photos/studio-reformer-standing.jpg" alt="Почему реформер" fetchpriority="high" decoding="async"><figcaption class="credit">
-    <span>Москва, проезд Серебрякова, д. 2 к.1</span><span aria-hidden="true">01 / 08</span>
+    <span>Режим работы: пн-вс с 08:00 до 21:00</span><span aria-hidden="true">01 / 08</span>
   </figcaption></figure>
 </section>
 <section class="band wrap split"><div><span class="section-id" aria-hidden="true">01</span>
@@ -28,6 +28,16 @@
   if (!root || root.dataset.ready) return;
   root.dataset.ready = "1";
   const find = selector => root.querySelector(selector);
+
+  // Static files keep working on disk; the hosted mirror uses the Tilda routes.
+  if (location.protocol === "https:" || location.protocol === "http:") {
+    root.querySelectorAll('a[href*="index.html"]').forEach(link => {
+      const url = new URL(link.href);
+      if (url.origin !== location.origin || !url.pathname.endsWith("/index.html")) return;
+      url.pathname = url.pathname.slice(0, -"/index.html".length) || "/";
+      link.href = url.href;
+    });
+  }
 
   const burger = find(".burger");
   const nav = find(".nav");

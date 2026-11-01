@@ -251,6 +251,17 @@ def team(page):
 PAGES["komanda"] = team
 
 
+def faq(page):
+    f = DATA["faq"]
+    items = "".join(f'<details><summary>{esc(question)}</summary>{p(answer)}</details>'
+                    for question,answer in f["items"])
+    return page.intro(f["intro"]) + '<div class="band wrap split"><figure>' + page.photo(
+        "detail-hands-straps", DATA["directions"]["items"][0]["title"]) + '</figure><div>' + items + '</div></div>'
+
+
+PAGES["faq"] = faq
+
+
 def styles(asset_base):
     fonts = (SRC / "fonts.css").read_text().replace("__ASSETS__", asset_base)
     return fonts + (SRC / "theme.css").read_text()

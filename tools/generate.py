@@ -199,6 +199,17 @@ def directions(page):
 PAGES["napravleniya"] = directions
 
 
+def schedule(page):
+    s = DATA["schedule"]
+    return (page.intro(s["intro"]) + '<section class="band wrap">'
+            + page.widget("schedule", LABEL["book"]) + '</section>'
+            + f'<section class="band wrap split"><h2>{LABEL["account"]}</h2><div>{p(s["rule"])}'
+              f'<div class="actions">{page.action("", LABEL["account"], "#cabinet")}</div></div></section>')
+
+
+PAGES["raspisanie"] = schedule
+
+
 def styles(asset_base):
     fonts = (SRC / "fonts.css").read_text().replace("__ASSETS__", asset_base)
     return fonts + (SRC / "theme.css").read_text()

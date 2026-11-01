@@ -1,50 +1,178 @@
-"""Generate file:// previews and Tilda T123 fragments from the same source."""
+"""Regenerate the static site and Tilda T123 blocks. Python 3, no dependencies."""
 import json
-from html import escape
+from html import escape as esc
 from pathlib import Path
+from urllib.parse import urlencode
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "tools"
 DATA = json.loads((ROOT / "content.json").read_text())
-SITE = ROOT / "site"
-TILDA = ROOT / "tilda"
-
-
-def link(current, target, embed):
-    if embed:
-        return "/" + target
-    return ("../" if current else "") + (target + "/" if target else "") + "index.html"
-
-
-def render(slug, embed):
-    nav = "".join(
-        f'<a href="{link(slug, route, embed)}">{escape(label)}</a> '
-        for route, label in DATA["pages"].items()
-    )
-    return f'<nav>{nav}</nav><main><h1>{escape(DATA["pages"][slug])}</h1></main>'
-
-
+SITE, TILDA = ROOT / "site", ROOT / "tilda"
 ASSET_CDN = "https://cdn.jsdelivr.net/gh/elenaisanewleet/homepilates-tz@7d21b5c8de5e5a31d09ea95fac29a1acda797ac6/site/assets"
+LABEL = DATA["labels"]
+CONTACT = DATA["contacts"]
+LEGAL = DATA["legal"]
+INTEGR = DATA["integrations"]
+MISS = DATA["placeholder"]
+
+
+def a(url, text, classes="textlink"):
+    return f'<a class="{classes}" href="{esc(url)}">{esc(text)}</a>'
+
+
+def p(text):
+    return f'<p>{esc(text)}</p>'
+
+
+def listing(items, numbered=False):
+    tag, cls = ("ol", "steps") if numbered else ("ul", "list")
+    return f'<{tag} class="{cls}">' + "".join(f'<li>{esc(x)}</li>' for x in items) + f'</{tag}>'
+
+
+def consent():
+    start, end = LEGAL["consent"].rsplit(" ", 1)
+    return (f'<label class="check"><input type="checkbox" name="{esc(LABEL["approval"])}" '
+            f'value="{esc(LEGAL["consent"])}" required><span>{esc(start)} '
+            f'{a(LEGAL["policy"], end)}</span></label>')
+
+
+def social():
+    icons = {
+        "vk": "M2 5h3.6c.4 5 2.7 8 4.7 8.7V5H14v5.1c2-.2 4.1-2.6 4.9-5.1h3.5c-.7 3.2-3 5.7-4.7 6.8 1.7.9 4.3 3.1 5.1 6.7h-3.9c-.9-2.3-2.6-4.1-4.9-4.4v4.4h-.6C6.1 18.5 2.5 13.5 2 5Z",
+        "telegram": "M21.8 3.2 18.3 20c-.3 1.2-1 1.5-2 .9l-5.4-4-2.6 2.5.4-5.6L18.9 5.9 6.3 12.6l-4.8-1.5c-1-.3-1-1 .2-1.5L20.4 2.5c.9-.3 1.6.1 1.4.7Z"
+    }
+    return '<div class="social">' + "".join(
+        f'<a aria-label="{esc(LABEL[key])}" href="{esc(CONTACT[key])}"><svg viewBox="0 0 24 24" '
+        f'aria-hidden="true"><path d="{path}"/></svg></a>' for key, path in icons.items()) + '</div>'
+
+
+def max_contact():
+    label = LABEL["max"] + ": " + CONTACT["messengerPhone"]
+    if CONTACT["maxUrl"]:
+        return a(CONTACT["maxUrl"], label)
+    return f'{esc(label)} <span class="missing">{MISS}</span>'
+
+
+def cookie_box():
+    config = DATA["cookie"]
+    names = ["essential-cookie", "analytics", "ads"]
+    opts = "".join(f'<label class="check"><input type="checkbox" name="{name}" '
+                   f'{"checked disabled" if i == 0 else ""}><span>{esc(text)}</span></label>'
+                   for i, (name, text) in enumerate(zip(names, config["categories"])))
+    return (f'<form class="cookie-box" aria-label="{LABEL["cookie"]}" hidden>{p(config["intro"])}'
+            f'<details><summary>{LABEL["categories"]}</summary><div class="cookie-opts">{opts}</div></details>'
+            f'<div class="cookie-foot"><button class="textlink" name="essential">{LABEL["essentialOnly"]}</button>'
+            f'<button class="action" name="save">{LABEL["save"]}</button></div></form>')
+
+
+class Page:
+    def __init__(self, slug, embed):
+        self.slug, self.embed = slug, embed
+        self.prefix = "../" if slug else ""
+        self.assets = ASSET_CDN if embed else self.prefix + "assets"
+        self.title = DATA["pages"][slug]
+
+    def link(self, target, anchor=""):
+        if self.embed:
+            return "/" + target + anchor
+        return self.prefix + (target + "/" if target else "") + "index.html" + anchor
+
+    def nav(self, cls):
+        links = []
+        for slug, title in DATA["pages"].items():
+            current = ' aria-current="page"' if slug == self.slug else ""
+            links.append(f'<a href="{self.link(slug)}"{current}>{esc(title)}</a>')
+        return f'<nav class="{cls}" aria-label="{LABEL["menu"]}">' + "".join(links) + '</nav>'
+
+    def brand(self):
+        return (f'<a class="brand" href="{self.link("")}"><img src="{self.assets}/logo.svg" '
+                f'width="38" height="38" alt=""><span>{esc(DATA["brand"])}</span></a>')
+
+    def header(self):
+        return (f'<header class="bar"><div class="wrap bar-inner">{self.brand()}'
+                f'<div id="hp-sections">{self.nav("nav")}</div>'
+                f'{a(self.link("", "#cabinet"), LABEL["account"], "cab")}'
+                f'<button type="button" class="burger" aria-label="{LABEL["menu"]}" '
+                'aria-expanded="false" aria-controls="hp-sections"><span></span><span></span></button>'
+                '</div></header>')
+
+    def footer(self):
+        terms = "".join(f'<dt>{esc(k)}</dt><dd>{esc(v)}</dd>' for k,v in LEGAL["requisites"].items())
+        return (f'<footer><div class="wrap"><div class="footgrid"><div>{self.brand()}</div>'
+                f'{self.nav("footnav")}<div class="contact-lines">{a(CONTACT["bot"], LABEL["footerBot"])}'
+                f'<span>{max_contact()}</span>{a(self.link("kontakty","#feedback"),LABEL["feedback"])}{social()}</div>'
+                f'</div><div class="legal"><details><summary>{LABEL["requisites"]}</summary><dl>{terms}</dl></details>'
+                f'<div class="policy-links">{a(LEGAL["policy"],LABEL["policy"])}'
+                f'{a(LEGAL["approval"],LABEL["approval"])}'
+                f'<button type="button" class="textlink" data-cookie-open>{LABEL["cookie"]}</button>'
+                f'</div></div></div></footer>')
+
+    def photo(self, filename, alt, cls="", priority=False):
+        timing = 'fetchpriority="high"' if priority else 'loading="lazy"'
+        return (f'<img class="photo {cls}" src="{self.assets}/photos/{filename}.jpg" '
+                f'alt="{esc(alt)}" {timing} decoding="async">')
+
+    def intro(self, text, photo=None):
+        image = f'<figure>{self.photo(photo,self.title,priority=True)}</figure>' if photo else ""
+        return (f'<section class="intro"><div class="wrap {"intro-media" if photo else ""}">'
+                f'<div><span class="kicker">{DATA["brand"]}</span><h1>{esc(self.title)}</h1>'
+                f'{p(text)}</div>{image}</div></section>')
+
+    def action(self, target="raspisanie", label=None, anchor=""):
+        return a(self.link(target,anchor),label or LABEL["book"],"action")
+
+    def widget(self, kind, button, section=""):
+        cfg = INTEGR["mobifitness"]
+        params = dict(code=cfg["code"],club=cfg["club"],type=kind,language="ru",
+                      version="v6",host=cfg["domain"])
+        if section:
+            params["section"] = section
+        url = "https://" + cfg["domain"] + "/" + kind + "-widget/?" + urlencode(params)
+        standalone = url + ("#" + section if section else "")
+        title = DATA["pages"]["raspisanie"] if kind == "schedule" else LABEL["account"]
+        return (f'<form class="form-grid" data-widget-form>'
+                f'<button class="action" type="submit">{esc(button)}</button>{consent()}</form>'
+                f'<div class="mobi" id="hp-mobi" data-code="{cfg["code"]}" data-club="{cfg["club"]}" '
+                f'data-type="{kind}" data-section="{esc(section)}" data-url="{esc(url)}" data-title="{esc(title)}" inert></div>'
+                f'{a(standalone,LABEL["mobiOpen"],"textlink go")}')
+
+    def body(self):
+        renderer = PAGES.get(self.slug)
+        return renderer(self) if renderer else self.intro(DATA["seo"][self.slug])
+
+    def fragment(self):
+        script = (SRC / "runtime.js").read_text() if self.embed else ""
+        js = f'<script>\n{script}</script>' if self.embed else f'<script src="{self.assets}/homepilates.js"></script>'
+        return (f'<div class="hp" data-hp data-counter="{INTEGR["metrika"]}">{self.header()}'
+                f'<main>{self.body()}</main>{self.footer()}{cookie_box()}</div>\n{js}\n')
+
+
+PAGES = {}
 
 
 def styles(asset_base):
-    fonts = (ROOT / "tools/fonts.css").read_text().replace("__ASSETS__", asset_base)
-    return fonts + (ROOT / "tools/theme.css").read_text()
+    fonts = (SRC / "fonts.css").read_text().replace("__ASSETS__", asset_base)
+    return fonts + (SRC / "theme.css").read_text()
 
 
 def generate():
     TILDA.mkdir(exist_ok=True)
     (TILDA / "common.html").write_text("<style>\n" + styles(ASSET_CDN) + "</style>\n")
     (SITE / "assets/homepilates.css").write_text(styles("."))
-    for slug, title in DATA["pages"].items():
+    (SITE / "assets/homepilates.js").write_text((SRC / "runtime.js").read_text())
+    for slug in DATA["pages"]:
+        page = Page(slug, False)
+        meta = DATA["seo"][slug]
+        title = esc(page.title + " — " + DATA["brand"])
+        html = (f'<!doctype html>\n<html lang="ru"><head><meta charset="utf-8">'
+                f'<meta name="viewport" content="width=device-width,initial-scale=1">'
+                f'<title>{title}</title><meta name="description" content="{esc(meta)}">'
+                f'<link rel="icon" href="{page.assets}/logo.svg"><link rel="stylesheet" href="{page.assets}/homepilates.css">'
+                f'</head><body>{page.fragment()}</body></html>\n')
         directory = SITE / slug
         directory.mkdir(parents=True, exist_ok=True)
-        (directory / "index.html").write_text(
-            '<!doctype html>\n<html lang="ru"><meta charset="utf-8">'
-            '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            f'<link rel="stylesheet" href="{("../" if slug else "")}assets/homepilates.css">'
-            f'<title>{escape(title)} — HomePilates</title><body><div class="hp">{render(slug, False)}</div></body></html>\n'
-        )
-        (TILDA / ((slug or "index") + ".html")).write_text(render(slug, True) + "\n")
+        (directory / "index.html").write_text(html)
+        (TILDA / ((slug or "index") + ".html")).write_text(Page(slug, True).fragment())
 
 
 if __name__ == "__main__":

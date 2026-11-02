@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "tools"
 DATA = json.loads((ROOT / "content.json").read_text())
 SITE, TILDA = ROOT / "site", ROOT / "tilda"
+PREVIEW_URL = "https://homepilates-tz.vercel.app"  # версия для просмотра: noindex и превью ссылки только здесь, не в tilda/
 ASSET_CDN = "https://cdn.jsdelivr.net/gh/elenaisanewleet/homepilates-tz@7d21b5c8de5e5a31d09ea95fac29a1acda797ac6/site/assets"
 LABEL = DATA["labels"]
 CONTACT = DATA["contacts"]
@@ -188,8 +189,11 @@ def directions(page):
     cards = []
     for i, item in enumerate(d["items"],1):
         title = esc(item["title"])
+        pending = item["title"] == MISS
         image = page.photo(item["photo"],item["title"]) if item["photo"] else ""
-        cards.append(f'<article class="card">{("<figure>"+image+"</figure>") if image else ""}'
+        if pending and not image:
+            image = f'<div class="missing missing-photo missing-card"><span>{esc(LABEL["directionPending"])}</span></div>'
+        cards.append(f'<article class="card{" card-pending" if pending else ""}">{("<figure>"+image+"</figure>") if image else ""}'
                      f'<span class="section-id" aria-hidden="true">{i:02d}</span><h2>{title}</h2>'
                      f'{p(item["text"]) if item["text"] else ""}'
                      f'{a(page.link("raspisanie"),LABEL["book"],"textlink go")}</article>')
@@ -240,7 +244,8 @@ def team(page):
         if person["photo"]:
             image = page.photo(person["photo"],name,"portrait")
         else:
-            image = f'<div class="missing missing-photo" role="img" aria-label="{LABEL["photo"]}: {esc(name)}">{MISS}</div>'
+            image = (f'<div class="missing missing-photo portrait-pending" role="img" aria-label="{LABEL["photo"]}: {esc(name)}">'
+                     f'<span class="cap">{LABEL["photoPending"]}</span><span>{MISS}</span></div>')
         bio = "".join(p(text) for text in person["bio"])
         profiles.append(f'<article class="band wrap split"><figure>{image}</figure><div>'
                         f'<span class="section-id" aria-hidden="true">{i:02d} / 05</span>'
@@ -275,13 +280,14 @@ def certificates(page):
 PAGES["sertifikaty"] = certificates
 
 
-def feedback():
+def feedback(embed=False):
     email = esc(CONTACT["email"])
     return (f'<form class="form-grid" data-feedback="{email}" data-subject="{LABEL["feedback"]}" '
             f'action="mailto:{email}" method="post" enctype="text/plain">'
             f'<label class="field">{LABEL["phone"]}<input type="tel" autocomplete="tel" '
             f'name="{LABEL["phone"]}" required></label>'
             f'<label class="field">{LABEL["message"]}<textarea rows="3" name="{LABEL["message"]}" required></textarea></label>'
+            + ('' if embed else f'<p class="form-note">{esc(LABEL["feedbackNote"])}</p>') +
             f'<button class="action" type="submit">{LABEL["submit"]}</button>{consent()}'
             f'<span>{CONTACT["emailLabel"]}: {a("mailto:"+CONTACT["email"], CONTACT["email"])}</span></form>')
 
@@ -305,7 +311,7 @@ def contacts(page):
             f'<div><span class="cap">{c["apps"]}</span><ul class="list">{apps}</ul></div></div>'
             f'<div class="contact-lines">{social_rows}<span>{LABEL["social"]}</span>{social()}'
             f'<span>{c["instagramLabel"]} {a(c["instagram"],c["instagram"])}</span>{p(c["instagramNote"])}</div></section>'
-            f'<section id="feedback" class="band wrap split"><h2>{LABEL["formTitle"]}</h2>{feedback()}</section>')
+            f'<section id="feedback" class="band wrap split"><h2>{LABEL["formTitle"]}</h2>{feedback(page.embed)}</section>')
 
 
 def digits(phone):
@@ -325,13 +331,21 @@ def generate():
     (TILDA / "common.html").write_text("<style>\n" + styles(ASSET_CDN) + "</style>\n")
     (SITE / "assets/homepilates.css").write_text(styles("."))
     (SITE / "assets/homepilates.js").write_text((SRC / "runtime.js").read_text())
+    (SITE / "robots.txt").write_text("User-agent: *\nDisallow: /\n")
     for slug in DATA["pages"]:
         page = Page(slug, False)
         meta = DATA["seo"][slug]
         title = esc(page.title + " — " + DATA["brand"])
+        url = PREVIEW_URL + ("/" + slug if slug else "/")
+        preview = (f'<meta name="robots" content="noindex, nofollow">'
+                   f'<meta property="og:type" content="website"><meta property="og:site_name" content="{DATA["brand"]}">'
+                   f'<meta property="og:title" content="{title}"><meta property="og:description" content="{esc(LABEL["previewDescription"])}">'
+                   f'<meta property="og:url" content="{url}"><meta property="og:locale" content="ru_RU">'
+                   f'<meta property="og:image" content="{PREVIEW_URL}/assets/photos/studio-reformer-standing.jpg">'
+                   f'<meta name="twitter:card" content="summary_large_image">')
         html = (f'<!doctype html>\n<html lang="ru"><head><meta charset="utf-8">'
                 f'<meta name="viewport" content="width=device-width,initial-scale=1">'
-                f'<title>{title}</title><meta name="description" content="{esc(meta)}">'
+                f'<title>{title}</title><meta name="description" content="{esc(meta)}">{preview}'
                 f'<link rel="icon" href="{page.assets}/logo.svg"><link rel="stylesheet" href="{page.assets}/homepilates.css">'
                 f'</head><body>{page.fragment()}</body></html>\n')
         directory = SITE / slug

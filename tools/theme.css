@@ -184,3 +184,4 @@ body:has(.hp){margin:0;background:#f6f3f0}
 .hp .fc-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:4px}
 .hp .fc-btn{display:inline-flex;align-items:center;height:44px;padding:0 16px;border:1px solid var(--line);font-size:14px;transition:border-color 220ms var(--ease)}
 .hp .fc-btn:hover,.hp .fc-actions .social a:hover{border-color:var(--ink)}
+.hp .footnav{align-content:start}

@@ -100,17 +100,28 @@ class Page:
     def footer(self):
         terms = "".join(f'<dt>{esc(k)}</dt><dd>{esc(v)}</dd>' for k,v in LEGAL["requisites"].items())
         return (f'<footer><div class="wrap"><div class="footgrid"><div>{self.brand()}</div>'
-                f'{self.nav("footnav")}<div class="contact-lines">'
-                f'{a("tel:+"+digits(CONTACT["phone"]), CONTACT["phone"], "textlink phone")}'
-                f'<span>{CONTACT["whatsappLabel"]}: {a("https://wa.me/"+digits(CONTACT["messengerPhone"]),CONTACT["messengerPhone"])}</span>'
-                f'<span class="foot-address">{esc(CONTACT["address"])}<br>{esc(CONTACT["hours"])}</span>'
-                f'{a(CONTACT["bot"], LABEL["footerBot"])}'
-                f'<span>{max_contact()}</span>{a(self.link("kontakty","#feedback"),LABEL["feedback"])}{social()}</div>'
+                f'{self.nav("footnav")}{self.foot_contacts()}'
                 f'</div><div class="legal"><details><summary>{LABEL["requisites"]}</summary><dl>{terms}</dl></details>'
                 f'<div class="policy-links">{a(LEGAL["policy"],LABEL["policy"])}'
                 f'{a(LEGAL["approval"],LABEL["approval"])}'
                 f'<button type="button" class="textlink" data-cookie-open>{LABEL["cookie"]}</button>'
                 f'</div></div></div></footer>')
+
+    def foot_contacts(self):
+        # Контакты в подвале: подписи-метки + значения, одна типографика; все данные — из контактов ТЗ.
+        c = CONTACT
+        max_value = (a(c["maxUrl"], c["messengerPhone"], "fc-link") if c["maxUrl"]
+                     else f'{esc(c["messengerPhone"])}<span class="missing">{MISS}</span>')
+        def row(label, value):
+            return f'<div class="fc-row"><span class="fc-label">{esc(label)}</span>{value}</div>'
+        return ('<div class="foot-contacts">'
+                + row(LABEL["phone"], a("tel:+"+digits(c["phone"]), c["phone"], "fc-phone"))
+                + row(c["whatsappLabel"], a("https://wa.me/"+digits(c["messengerPhone"]), c["messengerPhone"], "fc-link"))
+                + row(LABEL["max"], f'<span>{max_value}</span>')
+                + row(c["addressLabel"].rstrip(":"), f'<span class="fc-text">{esc(c["address"])}<br>{esc(c["hours"])}</span>')
+                + f'<div class="fc-actions">{a(c["bot"], LABEL["footerBot"], "fc-btn")}'
+                  f'{a(self.link("kontakty","#feedback"), LABEL["feedback"], "fc-btn")}{social()}</div>'
+                + '</div>')
 
     def photo(self, filename, alt, cls="", priority=False):
         timing = 'fetchpriority="high"' if priority else 'loading="lazy"'

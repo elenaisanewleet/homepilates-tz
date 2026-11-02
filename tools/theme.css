@@ -80,7 +80,7 @@ body:has(.hp){margin:0;background:#f6f3f0}
 .hp .portrait-pending{aspect-ratio:4/5;width:100%;gap:6px;text-align:center;background:rgba(55,105,168,.05);border:1px dashed rgba(55,105,168,.45)}
 .hp .portrait-pending .cap{color:var(--muted)}
 .hp .missing-card{aspect-ratio:4/3;width:100%;padding:24px;text-align:center;background:rgba(55,105,168,.05);border:1px dashed rgba(55,105,168,.45);line-height:1.4}
-.hp .card-pending h2{font-size:clamp(22px,2vw,28px);color:var(--blue)}
+.hp .card.card-pending h2{font-size:clamp(22px,2vw,28px);color:var(--blue)}
 .hp .form-note{grid-column:1/-1;font-size:14px;color:var(--muted);border-left:2px solid var(--olive);padding-left:12px}
 .hp .people article{border-top:1px solid var(--line);padding-top:24px}
 .hp .people h2,.hp .card h2{font-size:clamp(29px,3.2vw,44px)}

@@ -169,3 +169,4 @@ body:has(.hp){margin:0;background:#f6f3f0}
  .hp .cookie-box:not([hidden]) ~ .sticky-book{display:none}
  .hp footer{padding-bottom:88px}
 }
+.hp #cabinet h2 + p{margin-top:16px}

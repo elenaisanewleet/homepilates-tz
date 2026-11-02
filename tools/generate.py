@@ -100,7 +100,11 @@ class Page:
     def footer(self):
         terms = "".join(f'<dt>{esc(k)}</dt><dd>{esc(v)}</dd>' for k,v in LEGAL["requisites"].items())
         return (f'<footer><div class="wrap"><div class="footgrid"><div>{self.brand()}</div>'
-                f'{self.nav("footnav")}<div class="contact-lines">{a(CONTACT["bot"], LABEL["footerBot"])}'
+                f'{self.nav("footnav")}<div class="contact-lines">'
+                f'{a("tel:+"+digits(CONTACT["phone"]), CONTACT["phone"], "textlink phone")}'
+                f'<span>{CONTACT["whatsappLabel"]}: {a("https://wa.me/"+digits(CONTACT["messengerPhone"]),CONTACT["messengerPhone"])}</span>'
+                f'<span class="foot-address">{esc(CONTACT["address"])}<br>{esc(CONTACT["hours"])}</span>'
+                f'{a(CONTACT["bot"], LABEL["footerBot"])}'
                 f'<span>{max_contact()}</span>{a(self.link("kontakty","#feedback"),LABEL["feedback"])}{social()}</div>'
                 f'</div><div class="legal"><details><summary>{LABEL["requisites"]}</summary><dl>{terms}</dl></details>'
                 f'<div class="policy-links">{a(LEGAL["policy"],LABEL["policy"])}'
@@ -178,6 +182,7 @@ def home(page):
   <div><span class="section-id" aria-hidden="true">02</span><h2>{h["whoTitle"]}</h2>{listing(h["who"])}</div></section>
 <section class="band wrap split"><div><span class="section-id" aria-hidden="true">03</span>
   <h2>{h["lessonTitle"]}</h2><div>{p(h["lesson"])}</div></div>{listing(h["steps"],True)}</section>
+<div class="wrap gallery">{"".join(f'<figure>{page.photo(name, alt)}</figure>' for name, alt in DATA["lessonPhotos"])}</div>
 <div class="wrap quote"><blockquote>{esc(h["quote"])}</blockquote><cite>{esc(h["author"])}</cite></div>
 <section class="band wrap split"><div><h2>{LABEL["reviews"]}</h2>
   <div>{a(INTEGR["map"]+"reviews/",LABEL["maps"],"textlink go")}</div></div>
@@ -344,7 +349,7 @@ def generate():
     for slug in DATA["pages"]:
         page = Page(slug, False)
         meta = DATA["seo"][slug]
-        title = esc(page.title + " — " + DATA["brand"])
+        title = esc(DATA.get("titles", {}).get(slug) or page.title + " — " + DATA["brand"])
         url = PREVIEW_URL + ("/" + slug if slug else "/")
         preview = (f'<meta name="robots" content="noindex, nofollow">'
                    f'<meta property="og:type" content="website"><meta property="og:site_name" content="{DATA["brand"]}">'

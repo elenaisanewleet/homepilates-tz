@@ -203,4 +203,9 @@ body:has(.hp){margin:0;background:#f6f3f0}
  .hp footer{padding-bottom:88px}
 }
 .hp #cabinet h2 + p{margin-top:16px}
+.hp .gallery{display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px}
+.hp .gallery .photo{aspect-ratio:4/5}
+@media(min-width:768px){.hp .gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}}
+.hp .contact-lines .phone{font:400 20px/1.3 var(--serif);letter-spacing:-.01em}
+.hp .foot-address{color:#5f5e5b;line-height:1.5}
 </style>

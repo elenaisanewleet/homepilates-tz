@@ -239,7 +239,9 @@ PAGES["stoimost"] = prices
 def team(page):
     team_data = DATA["team"]
     profiles = []
-    for i, person in enumerate(team_data["people"],1):
+    people = sorted(team_data["people"], key=lambda person: not person.get("lead"))  # основатель студии — первой
+    total = len(people)
+    for i, person in enumerate(people,1):
         name = person["name"]
         if person["photo"]:
             image = page.photo(person["photo"],name,"portrait")
@@ -247,9 +249,10 @@ def team(page):
             image = (f'<div class="missing missing-photo portrait-pending" role="img" aria-label="{LABEL["photo"]}: {esc(name)}">'
                      f'<span class="cap">{LABEL["photoPending"]}</span><span>{MISS}</span></div>')
         bio = "".join(p(text) for text in person["bio"])
-        profiles.append(f'<article class="band wrap split"><figure>{image}</figure><div>'
-                        f'<span class="section-id" aria-hidden="true">{i:02d} / 05</span>'
-                        f'<h2>{esc(name)}</h2><div class="copy">{bio}</div></div></article>')
+        role = f'<p class="role">{esc(person["role"])}</p>' if person.get("role") else ""
+        profiles.append(f'<article class="band wrap split{" person-lead" if person.get("lead") else ""}"><figure>{image}</figure><div>'
+                        f'<span class="section-id" aria-hidden="true">{i:02d} / {total:02d}</span>'
+                        f'<h2>{esc(name)}</h2>{role}<div class="copy">{bio}</div></div></article>')
     return page.intro(team_data["intro"]) + "".join(profiles)
 
 

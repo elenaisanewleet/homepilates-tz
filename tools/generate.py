@@ -131,10 +131,9 @@ class Page:
         url = "https://" + cfg["domain"] + "/" + kind + "-widget/?" + urlencode(params)
         standalone = url + ("#" + section if section else "")
         title = DATA["pages"]["raspisanie"] if kind == "schedule" else LABEL["account"]
-        return (f'<form class="form-grid" data-widget-form>'
-                f'<button class="action" type="submit">{esc(button)}</button>{consent()}</form>'
-                f'<div class="mobi" id="hp-mobi" data-code="{cfg["code"]}" data-club="{cfg["club"]}" '
-                f'data-type="{kind}" data-section="{esc(section)}" data-url="{esc(url)}" data-title="{esc(title)}" inert></div>'
+        # Виджет показывается сразу: согласие на обработку ПД Мобифитнес запрашивает в своих формах регистрации и записи.
+        return (f'<div class="mobi" id="hp-mobi" data-code="{cfg["code"]}" data-club="{cfg["club"]}" '
+                f'data-type="{kind}" data-section="{esc(section)}" data-url="{esc(url)}" data-title="{esc(title)}"></div>'
                 f'{a(standalone,LABEL["mobiOpen"],"textlink go")}')
 
     def body(self):
@@ -145,7 +144,12 @@ class Page:
         script = (SRC / "runtime.js").read_text() if self.embed else ""
         js = f'<script>\n{script}</script>' if self.embed else f'<script src="{self.assets}/homepilates.js"></script>'
         return (f'<div class="hp" data-hp data-counter="{INTEGR["metrika"]}">{self.header()}'
-                f'<main>{self.body()}</main>{self.footer()}{cookie_box()}</div>\n{js}\n')
+                f'<main>{self.body()}</main>{self.footer()}{cookie_box()}{self.sticky()}</div>\n{js}\n')
+
+    def sticky(self):
+        if self.slug == "raspisanie":
+            return ""
+        return a(self.link("raspisanie"), LABEL["book"], "action sticky-book")
 
 
 PAGES = {}
@@ -156,6 +160,8 @@ def home(page):
     shot = page.photo("studio-reformer-standing", h["whyTitle"], priority=True)
     sections = "".join(a(page.link(slug),title,"tile") for slug,title in DATA["pages"].items() if slug)
     reviews_url = "https://yandex.ru/maps-reviews-widget/" + INTEGR["organization"] + "?comments"
+    cta_head, _, cta_rest = h["cta"].partition(". ")  # текст ТЗ тот же: заголовок — первое предложение, дальше абзац
+    cta_head = cta_head + "." if cta_rest else cta_head
     return f"""
 <section class="home-hero wrap">
   <div><span class="kicker">{LABEL["brandPlace"]}</span>
@@ -178,7 +184,7 @@ def home(page):
   <iframe class="frame reviews" title="{LABEL["reviews"]}" loading="lazy" src="{reviews_url}"></iframe></section>
 <nav class="band wrap tiles" aria-label="{LABEL["menu"]}">{sections}</nav>
 <section id="cabinet" class="band wrap split"><div><span class="kicker">{LABEL["account"]}</span>
-  <h2>{esc(h["cta"])}</h2></div><div>{page.widget("personal",LABEL["account"])}</div></section>"""
+  <h2>{esc(cta_head)}</h2>{p(cta_rest) if cta_rest else ""}</div><div>{page.widget("personal",LABEL["account"])}</div></section>"""
 
 
 PAGES[""] = home
@@ -225,7 +231,7 @@ def prices(page):
             row = "".join(f'<td data-label="{esc(col)}">{esc(value)}</td>' for col,value in zip(columns,cells))
             rows.append("<tr>" + row + "</tr>")
         title = esc(group["title"])
-        tables.append(f'<details><summary><span class="index" aria-hidden="true">{i+1:02d}</span>{title}</summary>'
+        tables.append(f'<details{" open" if i == 0 else ""}><summary><span class="index" aria-hidden="true">{i+1:02d}</span>{title}</summary>'
                       f'<div class="tablebox"><table aria-label="{title}"><thead><tr>{head}</tr></thead>'
                       f'<tbody>{"".join(rows)}</tbody></table></div></details>')
     return (page.intro(data["intro"]) + f'<section class="band wrap"><h2 class="details-header">{data["title"]}</h2>'

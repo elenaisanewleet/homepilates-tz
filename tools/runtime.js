@@ -90,16 +90,10 @@
       encodeURIComponent(feedback.dataset.subject) + "&body=" + encodeURIComponent(body);
   });
 
-  const gate = find("[data-widget-form]");
-  if (!gate) return;
   const host = find(".mobi");
-  const check = gate.querySelector("input");
+  if (!host) return;
   const cfg = host.dataset;
   const address = new URL(cfg.url);
-  function accessible() {
-    host.inert = !check.checked;
-    host.style.pointerEvents = check.checked ? "" : "none";
-  }
   function mount() {
     if (host.dataset.mounted) return;
     host.dataset.mounted = "1";
@@ -133,13 +127,13 @@
       });
       host.appendChild(frame);
     }
-    accessible();
   }
-  check.addEventListener("change", accessible);
-  gate.addEventListener("submit", e => {
-    e.preventDefault();
-    mount();
-    host.scrollIntoView({block:"start"});
-  });
-  if (cfg.type === "schedule") mount();
+  // Расписание — сразу, остальные виджеты — когда до них почти доскроллили.
+  if (cfg.type === "schedule" || !("IntersectionObserver" in window)) mount();
+  else {
+    const io = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { io.disconnect(); mount(); }
+    }, {rootMargin: "600px 0px"});
+    io.observe(host);
+  }
 })();

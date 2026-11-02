@@ -196,4 +196,10 @@ body:has(.hp){margin:0;background:#f6f3f0}
 @media(prefers-reduced-motion:reduce){.hp *{animation:none!important;transition:none!important}}
 .hp .role{margin-top:10px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
 .hp .person-lead h2{font-size:clamp(40px,4.8vw,68px)}
+.hp .sticky-book{display:none}
+@media(max-width:767px){
+ .hp .sticky-book{display:flex;position:fixed;z-index:980;left:12px;right:12px;bottom:12px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+ .hp .cookie-box:not([hidden]) ~ .sticky-book{display:none}
+ .hp footer{padding-bottom:88px}
+}
 </style>
